@@ -1,408 +1,986 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ORBIT CONTROL</title>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
-<style>
-* { margin:0; padding:0; box-sizing:border-box; }
-:root {
-  --bg:#030d13; --panel:#071520; --border:#0d3347;
-  --accent:#00d4ff; --green:#00ff9d; --yellow:#f0c040; --red:#ff5555;
-  --text:#c8e8f0; --dim:#3a6a7a; --dimtext:#486070;
-}
-html,body { height:100%; background:var(--bg); color:var(--text); font-family:'Exo 2',sans-serif; overflow:hidden; }
-.root { display:flex; flex-direction:column; height:100vh; }
- 
-/* HEADER */
-.header { flex-shrink:0; height:52px; background:var(--panel); border-bottom:1px solid var(--border);
-  display:flex; align-items:center; justify-content:space-between; padding:0 18px; }
-.logo { display:flex; align-items:center; gap:10px; }
-.logo-ring { width:32px; height:32px; border:2px solid var(--accent); border-radius:50%;
-  display:flex; align-items:center; justify-content:center; font-size:15px;
-  box-shadow:0 0 10px rgba(0,212,255,.35); animation:glow 3s ease-in-out infinite; }
-@keyframes glow { 0%,100%{box-shadow:0 0 10px rgba(0,212,255,.35)} 50%{box-shadow:0 0 22px rgba(0,212,255,.7)} }
-.logo-title { font-family:'Orbitron',monospace; font-size:14px; font-weight:900; letter-spacing:.2em; color:var(--accent); }
-.logo-sub { font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--dimtext); letter-spacing:.12em; }
-.header-right { display:flex; align-items:center; gap:20px; }
-.clock { font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--green); }
-.status { display:flex; align-items:center; gap:6px; font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--green); }
-.dot-live { width:7px; height:7px; background:var(--green); border-radius:50%; animation:blink 1.5s ease-in-out infinite; }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
- 
-/* STATS */
-.stats { flex-shrink:0; display:grid; grid-template-columns:repeat(4,1fr); border-bottom:1px solid var(--border); }
-.stat { padding:8px 18px; border-right:1px solid var(--border); }
-.stat:last-child { border-right:none; }
-.stat-label { font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:.15em; color:var(--dimtext); margin-bottom:3px; }
-.stat-num { font-family:'Orbitron',monospace; font-size:24px; font-weight:700; line-height:1; }
-.c-total,.c-asm { color:var(--accent); }
-.c-tst { color:var(--yellow); }
-.c-lnch { color:var(--green); }
- 
-/* BODY 3 cols */
-.body { flex:1; display:grid; grid-template-columns:280px 1fr 300px; overflow:hidden; }
-.col { display:flex; flex-direction:column; border-right:1px solid var(--border); overflow:hidden; }
-.col:last-child { border-right:none; }
-.col-hdr { flex-shrink:0; padding:7px 12px; border-bottom:1px solid var(--border); background:rgba(0,212,255,.03);
-  display:flex; align-items:center; justify-content:space-between; }
-.col-title { font-family:'Orbitron',monospace; font-size:9px; letter-spacing:.22em; color:var(--accent); }
-.col-body { flex:1; overflow-y:auto; padding:10px; }
-.col-body::-webkit-scrollbar { width:3px; }
-.col-body::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
- 
-/* Filters */
-.filters { flex-shrink:0; display:flex; gap:4px; padding:7px 10px; border-bottom:1px solid var(--border); background:rgba(0,0,0,.2); }
-.fbtn { font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:.08em; padding:3px 8px;
-  border:1px solid var(--border); background:transparent; color:var(--dimtext); cursor:pointer; transition:all .15s; }
-.fbtn:hover,.fbtn.on { border-color:var(--accent); color:var(--accent); background:rgba(0,212,255,.06); }
- 
-/* Sat card */
-.sat-card { border:1px solid var(--border); padding:9px; margin-bottom:6px; cursor:pointer;
-  transition:all .2s; border-left:3px solid transparent; }
-.sat-card.s-Assembled { border-left-color:var(--accent); }
-.sat-card.s-Testing   { border-left-color:var(--yellow); }
-.sat-card.s-Launched  { border-left-color:var(--green); }
-.sat-card:hover { background:rgba(0,212,255,.04); }
-.sat-card.active { background:rgba(0,212,255,.07); border-color:var(--accent); }
-.sc-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:3px; }
-.sc-id { font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--dimtext); }
-.sc-name { font-size:13px; font-weight:600; }
-.badge { font-family:'Share Tech Mono',monospace; font-size:8px; padding:2px 6px; border-radius:2px; }
-.badge.Assembled { color:var(--accent); border:1px solid rgba(0,212,255,.3); background:rgba(0,212,255,.08); }
-.badge.Testing   { color:var(--yellow); border:1px solid rgba(240,192,64,.3); background:rgba(240,192,64,.08); }
-.badge.Launched  { color:var(--green);  border:1px solid rgba(0,255,157,.3);  background:rgba(0,255,157,.08); }
-.sc-meta { font-size:11px; color:var(--dimtext); }
-.empty { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px 0; gap:8px; }
-.empty-icon { font-size:26px; opacity:.25; }
-.empty-text { font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:.12em; color:var(--dimtext); text-align:center; }
- 
-/* Form */
-.form-group { margin-bottom:12px; }
-.form-label { font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:.15em; color:var(--dimtext); display:block; margin-bottom:4px; }
-.form-input { width:100%; background:rgba(0,212,255,.04); border:1px solid var(--border); color:var(--text);
-  padding:7px 10px; font-family:'Exo 2',sans-serif; font-size:13px; outline:none; transition:border-color .2s; }
-.form-input:focus { border-color:var(--accent); }
-.form-input::placeholder { color:var(--dimtext); }
- 
-/* Log section */
-.log-section { flex-shrink:0; border-top:1px solid var(--border); height:160px; display:flex; flex-direction:column; }
-.log-body { flex:1; overflow-y:auto; padding:5px 10px; font-family:'Share Tech Mono',monospace; font-size:10px; line-height:1.8; }
-.log-body::-webkit-scrollbar { width:3px; }
-.log-body::-webkit-scrollbar-thumb { background:var(--border); }
-.ll { color:var(--dimtext); }
-.ll .lts { color:#1a3040; }
-.ll .lact { color:var(--green); }
-.ll.hit .lact { color:var(--accent); }
-.ll.err .lact { color:var(--red); }
- 
-/* Progress */
-.progress { display:flex; align-items:center; margin:12px 0; }
-.prog-step { display:flex; flex-direction:column; align-items:center; flex:1; }
-.prog-dot { width:24px; height:24px; border-radius:50%; border:2px solid var(--border);
-  display:flex; align-items:center; justify-content:center; font-size:10px; margin-bottom:4px; transition:all .3s; }
-.prog-step.done .prog-dot { border-color:var(--green); background:rgba(0,255,157,.12); color:var(--green); }
-.prog-step.cur  .prog-dot { border-color:var(--accent); background:rgba(0,212,255,.12); color:var(--accent);
-  box-shadow:0 0 12px rgba(0,212,255,.4); animation:glow 2s ease-in-out infinite; }
-.prog-step.todo .prog-dot { color:var(--dimtext); }
-.prog-label { font-family:'Share Tech Mono',monospace; font-size:8px; color:var(--dimtext); }
-.prog-step.done .prog-label,.prog-step.cur .prog-label { color:var(--text); }
-.prog-line { flex:0 0 20px; height:2px; background:var(--border); margin-bottom:14px; transition:background .3s; }
-.prog-line.done { background:var(--green); }
- 
-/* Detail fields */
-.dfield { margin-bottom:10px; }
-.dlabel { font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:.15em; color:var(--dimtext); margin-bottom:3px; }
-.dval { font-size:13px; padding:5px 9px; background:rgba(0,212,255,.04); border:1px solid var(--border); border-left:2px solid var(--accent); }
-.sep { border:none; border-top:1px solid var(--border); margin:10px 0; }
-.sec { font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:.18em; color:var(--dimtext);
-  margin-bottom:7px; padding-bottom:4px; border-bottom:1px solid var(--border); }
- 
-/* History */
-.hist-item { display:flex; gap:8px; align-items:flex-start; margin-bottom:7px; }
-.hdot { width:7px; height:7px; border-radius:50%; margin-top:3px; flex-shrink:0; }
-.hdot.Assembled { background:var(--accent); }
-.hdot.Testing   { background:var(--yellow); }
-.hdot.Launched  { background:var(--green); }
-.hstage { font-size:12px; font-weight:600; }
-.hts { font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--dimtext); }
- 
-/* Buttons */
-.btn { width:100%; padding:8px 12px; font-family:'Orbitron',monospace; font-size:9px;
-  letter-spacing:.13em; border:1px solid; background:transparent; cursor:pointer; transition:all .2s; margin-bottom:5px; }
-.btn-advance { border-color:var(--accent); color:var(--accent); }
-.btn-advance:hover:not(:disabled) { background:rgba(0,212,255,.1); }
-.btn-danger  { border-color:var(--red); color:var(--red); }
-.btn-danger:hover:not(:disabled)  { background:rgba(255,85,85,.08); }
-.btn-ghost   { border-color:var(--border); color:var(--dimtext); }
-.btn-ghost:hover  { color:var(--text); border-color:var(--dim); }
-.btn-submit  { border-color:var(--accent); color:var(--accent); }
-.btn-submit:hover { background:rgba(0,212,255,.1); }
-.btn:disabled { opacity:.3; cursor:not-allowed; }
- 
-/* Cache badge */
-.cbadge { font-family:'Share Tech Mono',monospace; font-size:9px; padding:2px 7px; border-radius:2px; }
-.cbadge.hit  { color:var(--accent); border:1px solid rgba(0,212,255,.3); background:rgba(0,212,255,.06); }
-.cbadge.miss { color:var(--dimtext); border:1px solid var(--border); }
- 
-/* Toast */
-#toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(60px);
-  background:var(--panel); border:1px solid var(--accent); padding:9px 18px;
-  font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--accent);
-  box-shadow:0 0 20px rgba(0,212,255,.2); transition:transform .3s cubic-bezier(.34,1.56,.64,1); z-index:999; white-space:nowrap; }
-#toast.show { transform:translateX(-50%) translateY(0); }
-#toast.err  { border-color:var(--red); color:var(--red); box-shadow:0 0 20px rgba(255,85,85,.2); }
-</style>
-</head>
-<body>
-<div class="root">
- 
-  <div class="header">
-    <div class="logo">
-      <div class="logo-ring">🛸</div>
-      <div>
-        <div class="logo-title">ORBIT CONTROL</div>
-        <div class="logo-sub">SATELLITE LAUNCH MANAGEMENT SYSTEM v1.0</div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ORBIT CONTROL</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      :root {
+        --bg: #030d13;
+        --panel: #071520;
+        --border: #0d3347;
+        --accent: #00d4ff;
+        --green: #00ff9d;
+        --yellow: #f0c040;
+        --red: #ff5555;
+        --text: #c8e8f0;
+        --dim: #3a6a7a;
+        --dimtext: #486070;
+      }
+      html,
+      body {
+        height: 100%;
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Exo 2", sans-serif;
+        overflow: hidden;
+      }
+      .root {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+      }
+
+      /* HEADER */
+      .header {
+        flex-shrink: 0;
+        height: 52px;
+        background: var(--panel);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 18px;
+      }
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .logo-ring {
+        width: 32px;
+        height: 32px;
+        border: 2px solid var(--accent);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        box-shadow: 0 0 10px rgba(0, 212, 255, 0.35);
+        animation: glow 3s ease-in-out infinite;
+      }
+      @keyframes glow {
+        0%,
+        100% {
+          box-shadow: 0 0 10px rgba(0, 212, 255, 0.35);
+        }
+        50% {
+          box-shadow: 0 0 22px rgba(0, 212, 255, 0.7);
+        }
+      }
+      .logo-title {
+        font-family: "Orbitron", monospace;
+        font-size: 14px;
+        font-weight: 900;
+        letter-spacing: 0.2em;
+        color: var(--accent);
+      }
+      .logo-sub {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 9px;
+        color: var(--dimtext);
+        letter-spacing: 0.12em;
+      }
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+      .clock {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 11px;
+        color: var(--green);
+      }
+      .status {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-family: "Share Tech Mono", monospace;
+        font-size: 9px;
+        color: var(--green);
+      }
+      .dot-live {
+        width: 7px;
+        height: 7px;
+        background: var(--green);
+        border-radius: 50%;
+        animation: blink 1.5s ease-in-out infinite;
+      }
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.2;
+        }
+      }
+
+      /* STATS */
+      .stats {
+        flex-shrink: 0;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        border-bottom: 1px solid var(--border);
+      }
+      .stat {
+        padding: 8px 18px;
+        border-right: 1px solid var(--border);
+      }
+      .stat:last-child {
+        border-right: none;
+      }
+      .stat-label {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 9px;
+        letter-spacing: 0.15em;
+        color: var(--dimtext);
+        margin-bottom: 3px;
+      }
+      .stat-num {
+        font-family: "Orbitron", monospace;
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 1;
+      }
+      .c-total,
+      .c-asm {
+        color: var(--accent);
+      }
+      .c-tst {
+        color: var(--yellow);
+      }
+      .c-lnch {
+        color: var(--green);
+      }
+
+      /* BODY 3 cols */
+      .body {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 280px 1fr 300px;
+        overflow: hidden;
+      }
+      .col {
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid var(--border);
+        overflow: hidden;
+      }
+      .col:last-child {
+        border-right: none;
+      }
+      .col-hdr {
+        flex-shrink: 0;
+        padding: 7px 12px;
+        border-bottom: 1px solid var(--border);
+        background: rgba(0, 212, 255, 0.03);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .col-title {
+        font-family: "Orbitron", monospace;
+        font-size: 9px;
+        letter-spacing: 0.22em;
+        color: var(--accent);
+      }
+      .col-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px;
+      }
+      .col-body::-webkit-scrollbar {
+        width: 3px;
+      }
+      .col-body::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 2px;
+      }
+
+      /* Filters */
+      .filters {
+        flex-shrink: 0;
+        display: flex;
+        gap: 4px;
+        padding: 7px 10px;
+        border-bottom: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.2);
+      }
+      .fbtn {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 9px;
+        letter-spacing: 0.08em;
+        padding: 3px 8px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--dimtext);
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .fbtn:hover,
+      .fbtn.on {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: rgba(0, 212, 255, 0.06);
+      }
+
+      /* Sat card */
+      .sat-card {
+        border: 1px solid var(--border);
+        padding: 9px;
+        margin-bottom: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border-left: 3px solid transparent;
+      }
+      .sat-card.s-Assembled {
+        border-left-color: var(--accent);
+      }
+      .sat-card.s-Testing {
+        border-left-color: var(--yellow);
+      }
+      .sat-card.s-Launched {
+        border-left-color: var(--green);
+      }
+      .sat-card:hover {
+        background: rgba(0, 212, 255, 0.04);
+      }
+      .sat-card.active {
+        background: rgba(0, 212, 255, 0.07);
+        border-color: var(--accent);
+      }
+      .sc-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 3px;
+      }
+      .sc-id {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 9px;
+        color: var(--dimtext);
+      }
+      .sc-name {
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .badge {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 8px;
+        padding: 2px 6px;
+        border-radius: 2px;
+      }
+      .badge.Assembled {
+        color: var(--accent);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        background: rgba(0, 212, 255, 0.08);
+      }
+      .badge.Testing {
+        color: var(--yellow);
+        border: 1px solid rgba(240, 192, 64, 0.3);
+        background: rgba(240, 192, 64, 0.08);
+      }
+      .badge.Launched {
+        color: var(--green);
+        border: 1px solid rgba(0, 255, 157, 0.3);
+        background: rgba(0, 255, 157, 0.08);
+      }
+      .sc-meta {
+        font-size: 11px;
+        color: var(--dimtext);
+      }
+      .empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 24px 0;
+        gap: 8px;
+      }
+      .empty-icon {
+        font-size: 26px;
+        opacity: 0.25;
+      }
+      .empty-text {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 9px;
+        letter-spacing: 0.12em;
+        color: var(--dimtext);
+        text-align: center;
+      }
+
+      /* Form */
+      .form-group {
+        margin-bottom: 12px;
+      }
+      .form-label {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 9px;
+        letter-spacing: 0.15em;
+        color: var(--dimtext);
+        display: block;
+        margin-bottom: 4px;
+      }
+      .form-input {
+        width: 100%;
+        background: rgba(0, 212, 255, 0.04);
+        border: 1px solid var(--border);
+        color: var(--text);
+        padding: 7px 10px;
+        font-family: "Exo 2", sans-serif;
+        font-size: 13px;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+      .form-input:focus {
+        border-color: var(--accent);
+      }
+      .form-input::placeholder {
+        color: var(--dimtext);
+      }
+
+      /* Log section */
+      .log-section {
+        flex-shrink: 0;
+        border-top: 1px solid var(--border);
+        height: 160px;
+        display: flex;
+        flex-direction: column;
+      }
+      .log-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 5px 10px;
+        font-family: "Share Tech Mono", monospace;
+        font-size: 10px;
+        line-height: 1.8;
+      }
+      .log-body::-webkit-scrollbar {
+        width: 3px;
+      }
+      .log-body::-webkit-scrollbar-thumb {
+        background: var(--border);
+      }
+      .ll {
+        color: var(--dimtext);
+      }
+      .ll .lts {
+        color: #1a3040;
+      }
+      .ll .lact {
+        color: var(--green);
+      }
+      .ll.hit .lact {
+        color: var(--accent);
+      }
+      .ll.err .lact {
+        color: var(--red);
+      }
+
+      /* Progress */
+      .progress {
+        display: flex;
+        align-items: center;
+        margin: 12px 0;
+      }
+      .prog-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+      }
+      .prog-dot {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 2px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        margin-bottom: 4px;
+        transition: all 0.3s;
+      }
+      .prog-step.done .prog-dot {
+        border-color: var(--green);
+        background: rgba(0, 255, 157, 0.12);
+        color: var(--green);
+      }
+      .prog-step.cur .prog-dot {
+        border-color: var(--accent);
+        background: rgba(0, 212, 255, 0.12);
+        color: var(--accent);
+        box-shadow: 0 0 12px rgba(0, 212, 255, 0.4);
+        animation: glow 2s ease-in-out infinite;
+      }
+      .prog-step.todo .prog-dot {
+        color: var(--dimtext);
+      }
+      .prog-label {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 8px;
+        color: var(--dimtext);
+      }
+      .prog-step.done .prog-label,
+      .prog-step.cur .prog-label {
+        color: var(--text);
+      }
+      .prog-line {
+        flex: 0 0 20px;
+        height: 2px;
+        background: var(--border);
+        margin-bottom: 14px;
+        transition: background 0.3s;
+      }
+      .prog-line.done {
+        background: var(--green);
+      }
+
+      /* Detail fields */
+      .dfield {
+        margin-bottom: 10px;
+      }
+      .dlabel {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 9px;
+        letter-spacing: 0.15em;
+        color: var(--dimtext);
+        margin-bottom: 3px;
+      }
+      .dval {
+        font-size: 13px;
+        padding: 5px 9px;
+        background: rgba(0, 212, 255, 0.04);
+        border: 1px solid var(--border);
+        border-left: 2px solid var(--accent);
+      }
+      .sep {
+        border: none;
+        border-top: 1px solid var(--border);
+        margin: 10px 0;
+      }
+      .sec {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 9px;
+        letter-spacing: 0.18em;
+        color: var(--dimtext);
+        margin-bottom: 7px;
+        padding-bottom: 4px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      /* History */
+      .hist-item {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        margin-bottom: 7px;
+      }
+      .hdot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        margin-top: 3px;
+        flex-shrink: 0;
+      }
+      .hdot.Assembled {
+        background: var(--accent);
+      }
+      .hdot.Testing {
+        background: var(--yellow);
+      }
+      .hdot.Launched {
+        background: var(--green);
+      }
+      .hstage {
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .hts {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 9px;
+        color: var(--dimtext);
+      }
+
+      /* Buttons */
+      .btn {
+        width: 100%;
+        padding: 8px 12px;
+        font-family: "Orbitron", monospace;
+        font-size: 9px;
+        letter-spacing: 0.13em;
+        border: 1px solid;
+        background: transparent;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-bottom: 5px;
+      }
+      .btn-advance {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .btn-advance:hover:not(:disabled) {
+        background: rgba(0, 212, 255, 0.1);
+      }
+      .btn-danger {
+        border-color: var(--red);
+        color: var(--red);
+      }
+      .btn-danger:hover:not(:disabled) {
+        background: rgba(255, 85, 85, 0.08);
+      }
+      .btn-ghost {
+        border-color: var(--border);
+        color: var(--dimtext);
+      }
+      .btn-ghost:hover {
+        color: var(--text);
+        border-color: var(--dim);
+      }
+      .btn-submit {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .btn-submit:hover {
+        background: rgba(0, 212, 255, 0.1);
+      }
+      .btn:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+
+      /* Cache badge */
+      .cbadge {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 9px;
+        padding: 2px 7px;
+        border-radius: 2px;
+      }
+      .cbadge.hit {
+        color: var(--accent);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        background: rgba(0, 212, 255, 0.06);
+      }
+      .cbadge.miss {
+        color: var(--dimtext);
+        border: 1px solid var(--border);
+      }
+
+      /* Toast */
+      #toast {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%) translateY(60px);
+        background: var(--panel);
+        border: 1px solid var(--accent);
+        padding: 9px 18px;
+        font-family: "Share Tech Mono", monospace;
+        font-size: 11px;
+        color: var(--accent);
+        box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        z-index: 999;
+        white-space: nowrap;
+      }
+      #toast.show {
+        transform: translateX(-50%) translateY(0);
+      }
+      #toast.err {
+        border-color: var(--red);
+        color: var(--red);
+        box-shadow: 0 0 20px rgba(255, 85, 85, 0.2);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="root">
+      <div class="header">
+        <div class="logo">
+          <div class="logo-ring">🛸</div>
+          <div>
+            <div class="logo-title">ORBIT CONTROL</div>
+            <div class="logo-sub">SATELLITE LAUNCH MANAGEMENT SYSTEM v1.0</div>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="clock" id="clock">--:--:-- UTC</div>
+          <div class="status">
+            <div class="dot-live"></div>
+            SYSTEMS NOMINAL
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="header-right">
-      <div class="clock" id="clock">--:--:-- UTC</div>
-      <div class="status"><div class="dot-live"></div>SYSTEMS NOMINAL</div>
-    </div>
-  </div>
- 
-  <div class="stats">
-    <div class="stat"><div class="stat-label">Total</div><div class="stat-num c-total" id="s-total">0</div></div>
-    <div class="stat"><div class="stat-label">🔧 Assembled</div><div class="stat-num c-asm" id="s-asm">0</div></div>
-    <div class="stat"><div class="stat-label">🧪 Testing</div><div class="stat-num c-tst" id="s-tst">0</div></div>
-    <div class="stat"><div class="stat-label">🚀 Launched</div><div class="stat-num c-lnch" id="s-lnch">0</div></div>
-  </div>
- 
-  <div class="body">
- 
-    <!-- COL 1: LIST -->
-    <div class="col">
-      <div class="col-hdr">
-        <span class="col-title">▸ Satellites</span>
-        <span id="list-count" style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dimtext)">—</span>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-label">Total</div>
+          <div class="stat-num c-total" id="s-total">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">🔧 Assembled</div>
+          <div class="stat-num c-asm" id="s-asm">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">🧪 Testing</div>
+          <div class="stat-num c-tst" id="s-tst">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">🚀 Launched</div>
+          <div class="stat-num c-lnch" id="s-lnch">0</div>
+        </div>
       </div>
-      <div class="filters">
-        <button class="fbtn on" onclick="setFilter(this,'')">ALL</button>
-        <button class="fbtn" onclick="setFilter(this,'Assembled')">ASM</button>
-        <button class="fbtn" onclick="setFilter(this,'Testing')">TEST</button>
-        <button class="fbtn" onclick="setFilter(this,'Launched')">LNCH</button>
-      </div>
-      <div class="col-body">
-        <div id="sat-list">
-          <div class="empty"><div class="empty-icon">🛰️</div><div class="empty-text">NO SATELLITES<br>REGISTER ONE →</div></div>
+
+      <div class="body">
+        <!-- COL 1: LIST -->
+        <div class="col">
+          <div class="col-hdr">
+            <span class="col-title">▸ Satellites</span>
+            <span
+              id="list-count"
+              style="
+                font-family: &quot;Share Tech Mono&quot;, monospace;
+                font-size: 9px;
+                color: var(--dimtext);
+              "
+              >—</span
+            >
+          </div>
+          <div class="filters">
+            <button class="fbtn on" onclick="setFilter(this, '')">ALL</button>
+            <button class="fbtn" onclick="setFilter(this, 'Assembled')">
+              ASM
+            </button>
+            <button class="fbtn" onclick="setFilter(this, 'Testing')">
+              TEST
+            </button>
+            <button class="fbtn" onclick="setFilter(this, 'Launched')">
+              LNCH
+            </button>
+          </div>
+          <div class="col-body">
+            <div id="sat-list">
+              <div class="empty">
+                <div class="empty-icon">🛰️</div>
+                <div class="empty-text">NO SATELLITES<br />REGISTER ONE →</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- COL 2: FORM + LOG -->
+        <div class="col">
+          <div class="col-hdr">
+            <span class="col-title">▸ Register New Satellite</span>
+          </div>
+          <div class="col-body">
+            <div class="form-group">
+              <label class="form-label">Satellite Name *</label>
+              <input
+                class="form-input"
+                id="f-name"
+                placeholder="e.g. NEXUS-7"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Operator</label>
+              <input
+                class="form-input"
+                id="f-op"
+                placeholder="e.g. KazCosmos"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Mission</label>
+              <input
+                class="form-input"
+                id="f-mis"
+                placeholder="e.g. Earth observation LEO 550km"
+              />
+            </div>
+            <button class="btn btn-submit" onclick="createSat()">
+              ⊕ REGISTER SATELLITE
+            </button>
+          </div>
+          <div class="log-section">
+            <div class="col-hdr" style="flex-shrink: 0">
+              <span class="col-title">▸ System Log</span>
+              <span
+                style="
+                  font-family: &quot;Share Tech Mono&quot;, monospace;
+                  font-size: 9px;
+                  color: var(--dimtext);
+                "
+                >LIVE</span
+              >
+            </div>
+            <div class="log-body" id="log-body">
+              <div class="ll">
+                <span class="lact">SYSTEM</span> — waiting...
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- COL 3: DETAIL -->
+        <div class="col">
+          <div class="col-hdr">
+            <span class="col-title">▸ Detail</span>
+            <span id="cache-badge" style="display: none"></span>
+          </div>
+          <div class="col-body" id="detail-body">
+            <div class="empty" style="padding-top: 40px">
+              <div class="empty-icon" style="font-size: 22px; opacity: 0.15">
+                ◎
+              </div>
+              <div class="empty-text">SELECT A SATELLITE</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
- 
-    <!-- COL 2: FORM + LOG -->
-    <div class="col">
-      <div class="col-hdr"><span class="col-title">▸ Register New Satellite</span></div>
-      <div class="col-body">
-        <div class="form-group">
-          <label class="form-label">Satellite Name *</label>
-          <input class="form-input" id="f-name" placeholder="e.g. NEXUS-7" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Operator</label>
-          <input class="form-input" id="f-op" placeholder="e.g. KazCosmos" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Mission</label>
-          <input class="form-input" id="f-mis" placeholder="e.g. Earth observation LEO 550km" />
-        </div>
-        <button class="btn btn-submit" onclick="createSat()">⊕ REGISTER SATELLITE</button>
-      </div>
-      <div class="log-section">
-        <div class="col-hdr" style="flex-shrink:0">
-          <span class="col-title">▸ System Log</span>
-          <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--dimtext)">LIVE</span>
-        </div>
-        <div class="log-body" id="log-body">
-          <div class="ll"><span class="lact">SYSTEM</span> — waiting...</div>
-        </div>
-      </div>
-    </div>
- 
-    <!-- COL 3: DETAIL -->
-    <div class="col">
-      <div class="col-hdr">
-        <span class="col-title">▸ Detail</span>
-        <span id="cache-badge" style="display:none"></span>
-      </div>
-      <div class="col-body" id="detail-body">
-        <div class="empty" style="padding-top:40px">
-          <div class="empty-icon" style="font-size:22px;opacity:.15">◎</div>
-          <div class="empty-text">SELECT A SATELLITE</div>
-        </div>
-      </div>
-    </div>
- 
-  </div>
-</div>
- 
-<div id="toast"></div>
-<script>
-let filter='', selected=null, toastT=null;
- 
-setInterval(()=>{
-  document.getElementById('clock').textContent=
-    new Date().toISOString().replace('T',' ').slice(0,19)+' UTC';
-},1000);
- 
-function toast(msg,isErr=false){
-  const el=document.getElementById('toast');
-  el.textContent=msg; el.className='show'+(isErr?' err':'');
-  clearTimeout(toastT); toastT=setTimeout(()=>el.className='',3500);
-}
- 
-async function api(path,opts={}){
-  let r;
-  try{ r=await fetch(path,{headers:{'Content-Type':'application/json'},...opts}); }
-  catch(e){ throw new Error('Server offline. Run: python app.py'); }
-  const txt=await r.text();
-  if(!txt) throw new Error('Empty server response');
-  let d; try{ d=JSON.parse(txt); }catch(e){ throw new Error('Bad JSON from server'); }
-  if(!r.ok) throw new Error(d.error||`HTTP ${r.status}`);
-  return d;
-}
- 
-function setFilter(btn,stage){
-  filter=stage;
-  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on'); loadList();
-}
- 
-async function loadList(){
-  let sats,stats;
-  try{
-    const url='/api/satellites'+(filter?`?stage=${filter}`:'');
-    [sats,stats]=await Promise.all([api(url),api('/api/stats')]);
-  }catch(e){
-    document.getElementById('sat-list').innerHTML=
-      `<div class="empty"><div class="empty-text" style="color:var(--red)">${e.message}</div></div>`;
-    return;
-  }
-  document.getElementById('s-total').textContent=stats.total;
-  document.getElementById('s-asm').textContent=stats.assembled;
-  document.getElementById('s-tst').textContent=stats.testing;
-  document.getElementById('s-lnch').textContent=stats.launched;
-  const c=document.getElementById('sat-list');
-  document.getElementById('list-count').textContent=`${sats.length} entr${sats.length===1?'y':'ies'}`;
-  if(!sats.length){
-    c.innerHTML=`<div class="empty"><div class="empty-icon">🛰️</div><div class="empty-text">NONE FOUND</div></div>`;
-    return;
-  }
-  c.innerHTML=sats.map(s=>`
-    <div class="sat-card s-${s.stage} ${s.id===selected?'active':''}" onclick="selectSat('${s.id}')">
+
+    <div id="toast"></div>
+    <script>
+      let filter = "",
+        selected = null,
+        toastT = null;
+
+      setInterval(() => {
+        document.getElementById("clock").textContent =
+          new Date().toISOString().replace("T", " ").slice(0, 19) + " UTC";
+      }, 1000);
+
+      function toast(msg, isErr = false) {
+        const el = document.getElementById("toast");
+        el.textContent = msg;
+        el.className = "show" + (isErr ? " err" : "");
+        clearTimeout(toastT);
+        toastT = setTimeout(() => (el.className = ""), 3500);
+      }
+
+      async function api(path, opts = {}) {
+        let r;
+        try {
+          r = await fetch(path, {
+            headers: { "Content-Type": "application/json" },
+            ...opts,
+          });
+        } catch (e) {
+          throw new Error("Server offline. Run: python app.py");
+        }
+        const txt = await r.text();
+        if (!txt) throw new Error("Empty server response");
+        let d;
+        try {
+          d = JSON.parse(txt);
+        } catch (e) {
+          throw new Error("Bad JSON from server");
+        }
+        if (!r.ok) throw new Error(d.error || `HTTP ${r.status}`);
+        return d;
+      }
+
+      function setFilter(btn, stage) {
+        filter = stage;
+        document
+          .querySelectorAll(".fbtn")
+          .forEach((b) => b.classList.remove("on"));
+        btn.classList.add("on");
+        loadList();
+      }
+
+      async function loadList() {
+        let sats, stats;
+        try {
+          const url = "/api/satellites" + (filter ? `?stage=${filter}` : "");
+          [sats, stats] = await Promise.all([api(url), api("/api/stats")]);
+        } catch (e) {
+          document.getElementById("sat-list").innerHTML =
+            `<div class="empty"><div class="empty-text" style="color:var(--red)">${e.message}</div></div>`;
+          return;
+        }
+        document.getElementById("s-total").textContent = stats.total;
+        document.getElementById("s-asm").textContent = stats.assembled;
+        document.getElementById("s-tst").textContent = stats.testing;
+        document.getElementById("s-lnch").textContent = stats.launched;
+        const c = document.getElementById("sat-list");
+        document.getElementById("list-count").textContent =
+          `${sats.length} entr${sats.length === 1 ? "y" : "ies"}`;
+        if (!sats.length) {
+          c.innerHTML = `<div class="empty"><div class="empty-icon">🛰️</div><div class="empty-text">NONE FOUND</div></div>`;
+          return;
+        }
+        c.innerHTML = sats
+          .map(
+            (s) => `
+    <div class="sat-card s-${s.stage} ${s.id === selected ? "active" : ""}" onclick="selectSat('${s.id}')">
       <div class="sc-top">
         <div><div class="sc-id">${s.id}</div><div class="sc-name">${s.name}</div></div>
         <div class="badge ${s.stage}">${s.stage}</div>
       </div>
-      <div class="sc-meta">${s.mission||'—'} · ${s.operator||'—'}</div>
-    </div>`).join('');
-}
- 
-async function selectSat(id){
-  selected=id;
-  document.querySelectorAll('.sat-card').forEach(c=>
-    c.classList.toggle('active',c.querySelector('.sc-id')?.textContent===id));
-  let sat;
-  try{ sat=await api(`/api/satellites/${id}`); }
-  catch(e){ toast(e.message,true); return; }
-  const cb=document.getElementById('cache-badge');
-  cb.style.display='block';
-  cb.innerHTML=sat._source==='cache'
-    ?`<span class="cbadge hit">⚡ CACHE HIT</span>`
-    :`<span class="cbadge miss">💾 FILE READ</span>`;
-  renderDetail(sat); loadLogs();
-}
- 
-function renderDetail(sat){
-  const stages=['Assembled','Testing','Launched'];
-  const idx=stages.indexOf(sat.stage);
-  const prog=stages.map((s,i)=>{
-    const cls=i<idx?'done':i===idx?'cur':'todo';
-    const icon=i<idx?'✓':i===idx?'●':'○';
-    const line=i<2?`<div class="prog-line ${i<idx?'done':''}"></div>`:'';
-    return `<div class="prog-step ${cls}"><div class="prog-dot">${icon}</div><div class="prog-label">${s}</div></div>${line}`;
-  }).join('');
-  const hist=[...sat.history].reverse().map(h=>`
+      <div class="sc-meta">${s.mission || "—"} · ${s.operator || "—"}</div>
+    </div>`,
+          )
+          .join("");
+      }
+
+      async function selectSat(id) {
+        selected = id;
+        document
+          .querySelectorAll(".sat-card")
+          .forEach((c) =>
+            c.classList.toggle(
+              "active",
+              c.querySelector(".sc-id")?.textContent === id,
+            ),
+          );
+        let sat;
+        try {
+          sat = await api(`/api/satellites/${id}`);
+        } catch (e) {
+          toast(e.message, true);
+          return;
+        }
+        const cb = document.getElementById("cache-badge");
+        cb.style.display = "block";
+        cb.innerHTML =
+          sat._source === "cache"
+            ? `<span class="cbadge hit">⚡ CACHE HIT</span>`
+            : `<span class="cbadge miss">💾 FILE READ</span>`;
+        renderDetail(sat);
+        loadLogs();
+      }
+
+      function renderDetail(sat) {
+        const stages = ["Assembled", "Testing", "Launched"];
+        const idx = stages.indexOf(sat.stage);
+        const prog = stages
+          .map((s, i) => {
+            const cls = i < idx ? "done" : i === idx ? "cur" : "todo";
+            const icon = i < idx ? "✓" : i === idx ? "●" : "○";
+            const line =
+              i < 2
+                ? `<div class="prog-line ${i < idx ? "done" : ""}"></div>`
+                : "";
+            return `<div class="prog-step ${cls}"><div class="prog-dot">${icon}</div><div class="prog-label">${s}</div></div>${line}`;
+          })
+          .join("");
+        const hist = [...sat.history]
+          .reverse()
+          .map(
+            (h) => `
     <div class="hist-item">
       <div class="hdot ${h.stage}"></div>
-      <div><div class="hstage">${h.stage}</div><div class="hts">${h.timestamp.slice(0,19).replace('T',' ')}</div></div>
-    </div>`).join('');
-  const final=sat.stage==='Launched';
-  const canSkip=sat.stage==='Assembled';
-  document.getElementById('detail-body').innerHTML=`
+      <div><div class="hstage">${h.stage}</div><div class="hts">${h.timestamp.slice(0, 19).replace("T", " ")}</div></div>
+    </div>`,
+          )
+          .join("");
+        const final = sat.stage === "Launched";
+        const canSkip = sat.stage === "Assembled";
+        document.getElementById("detail-body").innerHTML = `
     <div class="sec">Progress</div>
     <div class="progress">${prog}</div>
     <div class="dfield"><div class="dlabel">ID</div><div class="dval">${sat.id}</div></div>
     <div class="dfield"><div class="dlabel">Name</div><div class="dval">${sat.name}</div></div>
-    <div class="dfield"><div class="dlabel">Mission</div><div class="dval">${sat.mission||'—'}</div></div>
-    <div class="dfield"><div class="dlabel">Operator</div><div class="dval">${sat.operator||'—'}</div></div>
+    <div class="dfield"><div class="dlabel">Mission</div><div class="dval">${sat.mission || "—"}</div></div>
+    <div class="dfield"><div class="dlabel">Operator</div><div class="dval">${sat.operator || "—"}</div></div>
     <hr class="sep">
     <div class="sec">Stage History</div>${hist}
     <hr class="sep">
     <div class="sec">Actions</div>
-    <button class="btn btn-advance" onclick="advance('${sat.id}')" ${final?'disabled':''}>
-      ${final?'🔒 SEALED — LAUNCHED':'▶ ADVANCE STAGE'}
+    <button class="btn btn-advance" onclick="advance('${sat.id}')" ${final ? "disabled" : ""}>
+      ${final ? "🔒 SEALED — LAUNCHED" : "▶ ADVANCE STAGE"}
     </button>
-    <button class="btn btn-danger" onclick="skipTest('${sat.id}')" ${!canSkip?'disabled':''}>
+    <button class="btn btn-danger" onclick="skipTest('${sat.id}')" ${!canSkip ? "disabled" : ""}>
       ⚡ TEST ILLEGAL SKIP
     </button>
     <button class="btn btn-ghost" onclick="selectSat('${sat.id}')">↻ RE-FETCH (cache demo)</button>`;
-}
- 
-async function advance(id){
-  try{
-    const sat=await api(`/api/satellites/${id}/advance`,{method:'POST'});
-    toast(`✅ ${id} → ${sat.stage}`);
-    await loadList(); await selectSat(id); loadLogs();
-  }catch(e){ toast('🔒 '+e.message,true); }
-}
- 
-async function skipTest(id){
-  try{
-    await api(`/api/satellites/${id}/skip`,{method:'POST'});
-    toast('⚠️ Not blocked — bug!',true);
-  }catch(e){ toast('🚫 BLOCKED: '+e.message,true); loadLogs(); }
-}
- 
-async function createSat(){
-  const name=document.getElementById('f-name').value.trim();
-  const op=document.getElementById('f-op').value.trim();
-  const mis=document.getElementById('f-mis').value.trim();
-  if(!name){ toast('❌ Name required',true); return; }
-  try{
-    const sat=await api('/api/satellites',{method:'POST',body:JSON.stringify({name,operator:op,mission:mis})});
-    document.getElementById('f-name').value='';
-    document.getElementById('f-op').value='';
-    document.getElementById('f-mis').value='';
-    toast(`✅ ${sat.id} registered`);
-    await loadList(); selectSat(sat.id); loadLogs();
-  }catch(e){ toast('❌ '+e.message,true); }
-}
- 
-async function loadLogs(){
-  let lines; try{ lines=await api('/api/logs'); }catch(e){ return; }
-  const b=document.getElementById('log-body');
-  if(!lines.length) return;
-  b.innerHTML=lines.map(l=>{
-    const hit=l.includes('CACHE HIT');
-    const err=l.includes('BLOCK')||l.includes('ILLEGAL');
-    return `<div class="ll ${hit?'hit':''} ${err?'err':''}"><span class="lts">${l.slice(0,21)}</span><span class="lact"> ${l.slice(22)}</span></div>`;
-  }).join('');
-}
- 
-loadList(); loadLogs();
-setInterval(()=>{ loadList(); loadLogs(); },5000);
-</script>
-</body>
+      }
+
+      async function advance(id) {
+        try {
+          const sat = await api(`/api/satellites/${id}/advance`, {
+            method: "POST",
+          });
+          toast(`✅ ${id} → ${sat.stage}`);
+          await loadList();
+          await selectSat(id);
+          loadLogs();
+        } catch (e) {
+          toast("🔒 " + e.message, true);
+        }
+      }
+
+      async function skipTest(id) {
+        try {
+          await api(`/api/satellites/${id}/skip`, { method: "POST" });
+          toast("⚠️ Not blocked — bug!", true);
+        } catch (e) {
+          toast("🚫 BLOCKED: " + e.message, true);
+          loadLogs();
+        }
+      }
+
+      async function createSat() {
+        const name = document.getElementById("f-name").value.trim();
+        const op = document.getElementById("f-op").value.trim();
+        const mis = document.getElementById("f-mis").value.trim();
+        if (!name) {
+          toast("❌ Name required", true);
+          return;
+        }
+        try {
+          const sat = await api("/api/satellites", {
+            method: "POST",
+            body: JSON.stringify({ name, operator: op, mission: mis }),
+          });
+          document.getElementById("f-name").value = "";
+          document.getElementById("f-op").value = "";
+          document.getElementById("f-mis").value = "";
+          toast(`✅ ${sat.id} registered`);
+          await loadList();
+          selectSat(sat.id);
+          loadLogs();
+        } catch (e) {
+          toast("❌ " + e.message, true);
+        }
+      }
+
+      async function loadLogs() {
+        let lines;
+        try {
+          lines = await api("/api/logs");
+        } catch (e) {
+          return;
+        }
+        const b = document.getElementById("log-body");
+        if (!lines.length) return;
+        b.innerHTML = lines
+          .map((l) => {
+            const hit = l.includes("CACHE HIT");
+            const err = l.includes("BLOCK") || l.includes("ILLEGAL");
+            return `<div class="ll ${hit ? "hit" : ""} ${err ? "err" : ""}"><span class="lts">${l.slice(0, 21)}</span><span class="lact"> ${l.slice(22)}</span></div>`;
+          })
+          .join("");
+      }
+
+      loadList();
+      loadLogs();
+      setInterval(() => {
+        loadList();
+        loadLogs();
+      }, 5000);
+    </script>
+  </body>
 </html>
- 
